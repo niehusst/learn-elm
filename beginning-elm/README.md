@@ -1,5 +1,7 @@
 ### Super basics of elm the framework and what it do
 
+This whole project (in the `beginning-elm/` dir was created with `elm init`. New package deps can be added to an inited project with `elm install` (which I think just uses NPM behind the scenes?).
+
 the `elm-format <file target>` command can be used to format elm files
 
 you can use `elm make <file target>` w/o the `--output` flag and it will create the index.html file for you, but it will lump all your generated js code into the html, which makes testing etc hard. So generally we prefer to invoke make as `elm make <file target> --output elm.js` and import the js into html as usual (see current index.html file). 
@@ -12,6 +14,8 @@ The `elm reactor` command can be used to run a localhost server to see your elm 
 the Ellie web app can be used as a in-browser alternative to all this make + reactor stuff
 
 ### ---- Syntax thoughts ----
+
+Everything is an immutible constant in Elm (this functional language thing). So you cant have mutable variables ever.
 
 Boolean not in Elm is `not`, and not equal is `/=`. Other bool operators are like C.
 
@@ -77,8 +81,6 @@ escapeEarth myVelocity mySpeed fuelStatus =
         whereToLand fuelStatus
 ```
 
-To import specific functions from a module, use `import Module exposing (function)`. But it's best practice to call module functions w/ the module prefix: `Module.function`.
-
 Anonymous funcs can be defined as `\param list -> "function body"`. It's common to also need to wrap them in `()` to disambiguate syntax.
 ```elm
 String.filter (\ch -> ch /= '-') "222-44-1345"
@@ -111,3 +113,41 @@ Array.set 1 4 -- returns `Array [1, 4, 3]`
 ```
 
 Tuple, unlike List/Array, can hold values of different data types.
+
+Records (aka maps) similarly have no constraints on the value types that can be mapped to w/in the same structure. Each key value has to be camelCase and not quoted. Record values can be accessed via dot notation (but secretly behind the scenes, elm creates a stand-alone function that could be invoked as `.name someRecord`. This allows for things like `List.map .name listOfRecords`).
+You can use `type alias` to create a shortcut type name + constructor for record types you want to use frequently.
+```elm
+someRecord = { name = "Jim", age = 100, height = 2.3 }
+type alias Person = { name : String, age : Int, height : Float }
+somePerson = Person "Jim" 100 2.3
+```
+
+Every data structure in Elm is immutable, so while you can change the values in a record, it will always return a new record rather than edit the existing one. Also, syntax is real weird:
+```elm
+{ recordToEdit | fieldName1 = newValue1, fieldName2 = newValue2 } 
+-- curly brackets are necessary. Returns a new record 
+```
+
+---- Import/Export src code ----
+
+To import specific functions from a module, use `import Module exposing (function)`. But it's best practice to call module functions w/ the module prefix: `Module.function`.
+
+Elm only looks for exposed functions from the directories specified in the `elm.json` file under `"source-directories"`, so if you add new directories not nested in an already included src dir, be sure to add it to that list to make sure Elm will look for source files there.
+
+---- Testing ----
+
+To start using elms test framework, we need to install `elm-test` via npm `npm install elm-test -g`. Then you need to call `elm-test init` in the project you want to add tests in.
+
+There are no special rules for writing tests in Elm (e.g. dont have to start func names with test). Anything exposed by the files in the `test/` directories will be run as a test. If you have helper funcs you dont want run as tests, define as internal scope to a test function, or explicitly define the exposed functions in your test file.
+
+Elm test framework uses `describe` to allow grouping of test functions together.
+```elm
+testGroup =
+  describe "Similar tests"
+    [ test "1 < 2" <|
+      \_ -> 1 |> Expect.lessThan 2
+    , test "2 < 3" <|
+      \_ -> 2 |> Expect.lessThan 3
+    ]
+```
+You can nest `describe` calls together as well by putting a describe in the list of another describe.
