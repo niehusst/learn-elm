@@ -92,7 +92,76 @@ List.filter (String.contains "nerd") ["nerd1", "some jock"]
 
 `::` is the cons operator! `1 :: [2]` yields `[1,2]`
 
----- Standard Lib ----
+Elm does type inference of you functions etc, but you can provide type hints to make things less ambiguous if necessary:
+```elm
+-- this only allows this concat function to be used w/ string, rather than any appendable
+add : String -> String -> String
+add s1 s2 =
+  s1 ++ s2
+
+-- im guessing the function def is like this because of function partials
+funcName : param1Type -> paramNType -> RetType
+funcName =
+  ... -- definition
+```
+
+You can also create new types, basically enums, that arent associated to any existing standard type. (technical term for this is a union type)
+```elm
+type BasicallyEnum
+  = CaseOne
+  | CaseTwo
+  | CaseN
+
+whichCase : BasicallyEnum -> String
+whichCase enumCase =
+  case enumCase of
+    CaseOne ->
+      "its 1"
+    CaseTwo ->
+      "its 2"
+    CaseN ->
+      "its n"
+    _ ->         -- default case is actually optional because there is finite options w/ enum type
+      "oops!"
+```
+Elm even allows associated types w/ enum cases:
+```elm
+type Result
+  = Loading
+  | Success Int
+  | Failure Int String
+
+handleResult : Result -> String
+handleResult res =
+  case res of
+    Loading ->
+      "loading ..."
+    Success httpCode ->
+      String.join " "
+        [ "succeeded with code"
+        , String.fromInt httpCode
+        ]
+    Failure httpCode errorMsg ->
+      String.join " "
+        [ "failed with code"
+        , String.fromInt httpCode
+        , errorMsg
+        ]
+
+-- while `Loading` is a complete value in its own right, `Success` and `Failure` are
+-- data constructor functions. So they need to be initialized w/ values to be created
+handleResult (Success 200)
+```
+This is how the `Maybe type` optional type works. It's a union type defined as follows. To unwrap a Just value, you need to use switch case.
+```elm
+type Maybe a
+  = Just a
+  | Nothing
+```
+By not providing a type hint, Elm interprets the value as a generic and allows as wide a usage as possible (based on the type inference it can do, if any). This allows great flexibility for things like the Result type I made above, which is limited by type requirements. (Elm actually has a similarly named type defined in elm/json)
+
+
+### ---- Standard Lib ----
 
 The `++` operator can be used to concat strings: `"s1" ++ "s2"`.
 
@@ -128,13 +197,13 @@ Every data structure in Elm is immutable, so while you can change the values in 
 -- curly brackets are necessary. Returns a new record 
 ```
 
----- Import/Export src code ----
+### ---- Import/Export src code ----
 
 To import specific functions from a module, use `import Module exposing (function)`. But it's best practice to call module functions w/ the module prefix: `Module.function`.
 
 Elm only looks for exposed functions from the directories specified in the `elm.json` file under `"source-directories"`, so if you add new directories not nested in an already included src dir, be sure to add it to that list to make sure Elm will look for source files there.
 
----- Testing ----
+### ---- Testing ----
 
 To start using elms test framework, we need to install `elm-test` via npm `npm install elm-test -g`. Then you need to call `elm-test init` in the project you want to add tests in.
 

@@ -3,6 +3,7 @@ module Playground exposing (main)
 import Html
 
 
+escapeEarth : Float -> Float -> String
 escapeEarth myVelocity mySpeed =
     if myVelocity > 11.182 then
         "Yeet bitch"
@@ -14,10 +15,12 @@ escapeEarth myVelocity mySpeed =
         "Crash n burn"
 
 
+computeSpeed : Float -> Float -> Float
 computeSpeed distance time =
     distance / time
 
 
+computeTime : Float -> Float -> Float
 computeTime tStart tEnd =
     tEnd - tStart
 
