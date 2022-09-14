@@ -160,6 +160,40 @@ type Maybe a
 ```
 By not providing a type hint, Elm interprets the value as a generic and allows as wide a usage as possible (based on the type inference it can do, if any). This allows great flexibility for things like the Result type I made above, which is limited by type requirements. (Elm actually has a similarly named type defined in elm/json)
 
+Switch cases in Elm allow for convenient patter matching. It can do the standard single value cases, but also tuples for matching multiple case inputs. But it can't do computation i case statments (like Kotlin can).
+```elm
+map2 : (a -> b -> value) -> Result x a -> Result x b -> Result x value
+map2 func rxa rxb =
+  case (rxa, rxb) of
+    (Ok a, Ok b) ->
+      Ok (func a b)
+    ( _, Err x) ->
+      Err x
+    (Err x, _) ->
+      Err x
+
+-- lists let you do some interesting pattern matching + value unpacking on them
+-- this impl of reduce showcases unpacking values from a list tail in a case
+foldl : (a -> b -> b) -> b -> List a -> b
+foldl func accumulator list =
+  case list of
+    [] ->
+      accumulator
+    x :: xs -> -- this pattern unpackes `list` as a cons of a value onto a tail. (Elm often refers to elements as x and collection of those elems as xs (plural))
+      foldl func (func x accumulator) xs
+```
+This unpacking ability is available in function parameter lists too. An interesting example is with records (dicts).
+```elm
+-- this is basically saying the func accepts ANY record that has at least these 2 fields (rather than only those 2)
+hello : { record | isLoggedIn: Bool, name: String } -> String
+--       hello : { isLoggedIn: Bool, name: String } -> String   -- this would accept only records w/ only those 2 fields
+hello { isLoggedIn, name } =    -- record unpacking in func name
+  case isLoggedIn of
+    True ->
+      "Hello " ++ name ++ "!"
+    False ->
+      "login you shit"
+```
 
 ### ---- Standard Lib ----
 
@@ -199,9 +233,14 @@ Every data structure in Elm is immutable, so while you can change the values in 
 
 ### ---- Import/Export src code ----
 
-To import specific functions from a module, use `import Module exposing (function)`. But it's best practice to call module functions w/ the module prefix: `Module.function`.
+An entire module can be imported with `import Module`. This makes it so that functions from the module have be accessed w/ the module name prefixed. To import specific functions from a module, use `import Module exposing (function)`. But it's best practice to import the whole module and call module functions w/ the module prefix anyway: `Module.function`.
+Sometimes, for modules that contain a type + related functions, to avoid repeating the module name before type names (since those are often the same), you can import just the type definitions from the module (as long as there are no collisions) with `import Module exposing (Module(..))`. Other functions from the module can still be accessed via dot notation, just the union type case defintions will be imported directly.
 
-Elm only looks for exposed functions from the directories specified in the `elm.json` file under `"source-directories"`, so if you add new directories not nested in an already included src dir, be sure to add it to that list to make sure Elm will look for source files there.
+To shorten frequently used module names, you can alias an import use `Import Module as ShorterName exposing (..)`.
+
+Elm only looks for exposed functions in modules from the directories specified in the `elm.json` file under `"source-directories"`, so if you add new directories not nested in an already included src dir, be sure to add it to that list to make sure Elm will look for source files there.
+
+Packages contain module(s). Packages are released via a package manager. Using a package in Elm is similar to using local modules; `import Package` and then the module(s) in the package are accessed as `Package.Module.Function`, except where Package and Module are the same, then Elm is nice and lets us only say it once.
 
 ### ---- Testing ----
 
@@ -220,3 +259,6 @@ testGroup =
     ]
 ```
 You can nest `describe` calls together as well by putting a describe in the list of another describe.
+
+Elm has built in fuzz (random) testing capability. Using the Test and Fuzz modules in tandem, you can write fuzz tests to feed random values to your functions. You can define your own fuzzers if necessary. Fuzz testing provides a powerful tool for testing, but isnt the same as unit testing, because it tests properties of functions, not specific cases. E.g. testing List.length with a fuzzer you could test the property "length is never negative", but that property test alone cant tell you if the length function is working as expected. So sometimes you need fuzz tests and unit tests in tandem to verify functions fully/better.
+
