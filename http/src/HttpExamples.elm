@@ -4,6 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Events exposing (onClick)
 import Http
+import Json.Decode exposing (Decoder, Error(..), decodeString, list, string)
 
 
 type alias Model =
@@ -15,7 +16,7 @@ type alias Model =
 type Msg
     = SendHttpRequest
     | SendShitRequest
-    | DataReceived (Result Http.Error String)
+    | DataReceived (Result Http.Error (List String))
 
 
 view : Model -> Html Msg
@@ -38,9 +39,14 @@ viewNickname nickname =
     li [] [ text nickname ]
 
 
+nicknameDecoder : Decoder (List String)
+nicknameDecoder =
+    list string
+
+
 url : String
 url =
-    "http://localhost:5016/old-school.txt"
+    "http://localhost:5016/nicknames"
 
 
 badurl : String
@@ -52,7 +58,7 @@ getNicknames : Cmd Msg
 getNicknames =
     Http.get
         { url = url
-        , expect = Http.expectString DataReceived
+        , expect = Http.expectJson DataReceived nicknameDecoder
         }
 
 
@@ -60,7 +66,7 @@ getError : Cmd Msg
 getError =
     Http.get
         { url = badurl
-        , expect = Http.expectString DataReceived
+        , expect = Http.expectJson DataReceived nicknameDecoder
         }
 
 
@@ -122,11 +128,7 @@ update msg model =
         SendShitRequest ->
             ( model, getError )
 
-        DataReceived (Ok nicknameStr) ->
-            let
-                nicknames =
-                    String.split "," nicknameStr
-            in
+        DataReceived (Ok nicknames) ->
             -- we have to reset error message or it will polute any future updates to the model
             ( { model
                 | nicknames = nicknames

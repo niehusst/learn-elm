@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>HttpExamples</title>
+  <title>DecodingJson</title>
   <style>body { padding: 0; margin: 0; }</style>
 </head>
 
@@ -5348,36 +5348,25 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
+var $krisajenkins$remotedata$RemoteData$NotAsked = {$: 'NotAsked'};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$HttpExamples$init = function (_v0) {
+var $author$project$DecodingJson$init = function (_v0) {
 	return _Utils_Tuple2(
-		{errorMessage: $elm$core$Maybe$Nothing, nicknames: _List_Nil},
+		{posts: $krisajenkins$remotedata$RemoteData$NotAsked},
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$HttpExamples$buildErrorMessage = function (err) {
-	switch (err.$) {
-		case 'BadUrl':
-			var msg = err.a;
-			return msg;
-		case 'Timeout':
-			return 'Server took too long to respond';
-		case 'NetworkError':
-			return 'Unable to reach server';
-		case 'BadStatus':
-			var statusCode = err.a;
-			return 'Req failed with status: ' + $elm$core$String$fromInt(statusCode);
-		default:
-			var msg = err.a;
-			return msg;
-	}
-};
-var $author$project$HttpExamples$DataReceived = function (a) {
+var $author$project$DecodingJson$DataReceived = function (a) {
 	return {$: 'DataReceived', a: a};
 };
-var $author$project$HttpExamples$badurl = 'http://localhost:5016/new-school.txt';
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -5920,11 +5909,6 @@ var $elm$core$Dict$update = F3(
 			return A2($elm$core$Dict$remove, targetKey, dictionary);
 		}
 	});
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $elm$http$Http$expectStringResponse = F2(
 	function (toMsg, toResult) {
 		return A3(
@@ -5932,6 +5916,17 @@ var $elm$http$Http$expectStringResponse = F2(
 			'',
 			$elm$core$Basics$identity,
 			A2($elm$core$Basics$composeR, toResult, toMsg));
+	});
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
 	});
 var $elm$http$Http$BadBody = function (a) {
 	return {$: 'BadBody', a: a};
@@ -5944,17 +5939,6 @@ var $elm$http$Http$BadUrl = function (a) {
 };
 var $elm$http$Http$NetworkError = {$: 'NetworkError'};
 var $elm$http$Http$Timeout = {$: 'Timeout'};
-var $elm$core$Result$mapError = F2(
-	function (f, result) {
-		if (result.$ === 'Ok') {
-			var v = result.a;
-			return $elm$core$Result$Ok(v);
-		} else {
-			var e = result.a;
-			return $elm$core$Result$Err(
-				f(e));
-		}
-	});
 var $elm$http$Http$resolve = F2(
 	function (toResult, response) {
 		switch (response.$) {
@@ -5978,11 +5962,33 @@ var $elm$http$Http$resolve = F2(
 					toResult(body));
 		}
 	});
-var $elm$http$Http$expectString = function (toMsg) {
-	return A2(
-		$elm$http$Http$expectStringResponse,
-		toMsg,
-		$elm$http$Http$resolve($elm$core$Result$Ok));
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
+	});
+var $krisajenkins$remotedata$RemoteData$Failure = function (a) {
+	return {$: 'Failure', a: a};
+};
+var $krisajenkins$remotedata$RemoteData$Success = function (a) {
+	return {$: 'Success', a: a};
+};
+var $krisajenkins$remotedata$RemoteData$fromResult = function (result) {
+	if (result.$ === 'Err') {
+		var e = result.a;
+		return $krisajenkins$remotedata$RemoteData$Failure(e);
+	} else {
+		var x = result.a;
+		return $krisajenkins$remotedata$RemoteData$Success(x);
+	}
 };
 var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $elm$http$Http$Request = function (a) {
@@ -6157,48 +6163,128 @@ var $elm$http$Http$get = function (r) {
 	return $elm$http$Http$request(
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
-var $author$project$HttpExamples$getError = $elm$http$Http$get(
-	{
-		expect: $elm$http$Http$expectString($author$project$HttpExamples$DataReceived),
-		url: $author$project$HttpExamples$badurl
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$DecodingJson$Post = F3(
+	function (id, title, author) {
+		return {author: author, id: id, title: title};
 	});
-var $author$project$HttpExamples$url = 'http://localhost:5016/old-school.txt';
-var $author$project$HttpExamples$getNicknames = $elm$http$Http$get(
-	{
-		expect: $elm$http$Http$expectString($author$project$HttpExamples$DataReceived),
-		url: $author$project$HttpExamples$url
+var $author$project$DecodingJson$Author = F2(
+	function (name, url) {
+		return {name: name, url: url};
 	});
-var $author$project$HttpExamples$update = F2(
-	function (msg, model) {
-		switch (msg.$) {
-			case 'SendHttpRequest':
-				return _Utils_Tuple2(model, $author$project$HttpExamples$getNicknames);
-			case 'SendShitRequest':
-				return _Utils_Tuple2(model, $author$project$HttpExamples$getError);
-			default:
-				if (msg.a.$ === 'Ok') {
-					var nicknameStr = msg.a.a;
-					var nicknames = A2($elm$core$String$split, ',', nicknameStr);
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{nicknames: nicknames}),
-						$elm$core$Platform$Cmd$none);
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A2($elm$json$Json$Decode$field, key, valDecoder),
+			decoder);
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$DecodingJson$authorDecoder = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'url',
+	$elm$json$Json$Decode$string,
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'name',
+		$elm$json$Json$Decode$string,
+		$elm$json$Json$Decode$succeed($author$project$DecodingJson$Author)));
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder = F3(
+	function (path, valDecoder, fallback) {
+		var nullOr = function (decoder) {
+			return $elm$json$Json$Decode$oneOf(
+				_List_fromArray(
+					[
+						decoder,
+						$elm$json$Json$Decode$null(fallback)
+					]));
+		};
+		var handleResult = function (input) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$at, path, $elm$json$Json$Decode$value),
+				input);
+			if (_v0.$ === 'Ok') {
+				var rawValue = _v0.a;
+				var _v1 = A2(
+					$elm$json$Json$Decode$decodeValue,
+					nullOr(valDecoder),
+					rawValue);
+				if (_v1.$ === 'Ok') {
+					var finalResult = _v1.a;
+					return $elm$json$Json$Decode$succeed(finalResult);
 				} else {
-					var error = msg.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								errorMessage: $elm$core$Maybe$Just(
-									$author$project$HttpExamples$buildErrorMessage(error))
-							}),
-						$elm$core$Platform$Cmd$none);
+					return A2(
+						$elm$json$Json$Decode$at,
+						path,
+						nullOr(valDecoder));
 				}
+			} else {
+				return $elm$json$Json$Decode$succeed(fallback);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, handleResult, $elm$json$Json$Decode$value);
+	});
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional = F4(
+	function (key, valDecoder, fallback, decoder) {
+		return A2(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder,
+				_List_fromArray(
+					[key]),
+				valDecoder,
+				fallback),
+			decoder);
+	});
+var $author$project$DecodingJson$postDecoder = A4(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+	'author',
+	$author$project$DecodingJson$authorDecoder,
+	{name: 'anon', url: ''},
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'title',
+		$elm$json$Json$Decode$string,
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'id',
+			$elm$json$Json$Decode$int,
+			$elm$json$Json$Decode$succeed($author$project$DecodingJson$Post))));
+var $author$project$DecodingJson$httpCommand = $elm$http$Http$get(
+	{
+		expect: A2(
+			$elm$http$Http$expectJson,
+			A2($elm$core$Basics$composeR, $krisajenkins$remotedata$RemoteData$fromResult, $author$project$DecodingJson$DataReceived),
+			$elm$json$Json$Decode$list($author$project$DecodingJson$postDecoder)),
+		url: 'http://localhost:5019/posts'
+	});
+var $author$project$DecodingJson$update = F2(
+	function (msg, model) {
+		if (msg.$ === 'SendHttpRequest') {
+			return _Utils_Tuple2(model, $author$project$DecodingJson$httpCommand);
+		} else {
+			var response = msg.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{posts: response}),
+				$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$HttpExamples$SendHttpRequest = {$: 'SendHttpRequest'};
-var $author$project$HttpExamples$SendShitRequest = {$: 'SendShitRequest'};
+var $author$project$DecodingJson$SendHttpRequest = {$: 'SendHttpRequest'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -6220,117 +6306,200 @@ var $elm$html$Html$Events$onClick = function (msg) {
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $elm$html$Html$h3 = _VirtualDom_node('h3');
-var $author$project$HttpExamples$viewError = function (errMsg) {
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$h3,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('HTTP error during file fetch.')
-					])),
-				$elm$html$Html$text('Error: ' + errMsg)
-			]));
-};
-var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $elm$html$Html$li = _VirtualDom_node('li');
-var $author$project$HttpExamples$viewNickname = function (nickname) {
-	return A2(
-		$elm$html$Html$li,
-		_List_Nil,
-		_List_fromArray(
-			[
-				$elm$html$Html$text(nickname)
-			]));
-};
-var $author$project$HttpExamples$viewNicknames = function (nicknames) {
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$h3,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Old School movie main characters:')
-					])),
-				A2(
-				$elm$html$Html$ul,
-				_List_Nil,
-				A2($elm$core$List$map, $author$project$HttpExamples$viewNickname, nicknames))
-			]));
-};
-var $author$project$HttpExamples$viewNicknamesOrError = function (model) {
-	var _v0 = model.errorMessage;
-	if (_v0.$ === 'Just') {
-		var message = _v0.a;
-		return $author$project$HttpExamples$viewError(message);
-	} else {
-		return $author$project$HttpExamples$viewNicknames(model.nicknames);
+var $author$project$DecodingJson$buildErrorMessage = function (error) {
+	switch (error.$) {
+		case 'BadUrl':
+			var msg = error.a;
+			return msg;
+		case 'Timeout':
+			return 'Server took too long to respond. timeout';
+		case 'NetworkError':
+			return 'Unable to reach the server';
+		case 'BadStatus':
+			var code = error.a;
+			return 'Request failed w/ code: ' + $elm$core$String$fromInt(code);
+		default:
+			var msg = error.a;
+			return msg;
 	}
 };
-var $author$project$HttpExamples$view = function (model) {
+var $elm$html$Html$h3 = _VirtualDom_node('h3');
+var $author$project$DecodingJson$viewError = function (error) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
 		_List_fromArray(
 			[
 				A2(
-				$elm$html$Html$div,
+				$elm$html$Html$h3,
 				_List_Nil,
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$HttpExamples$SendHttpRequest)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Get good Data from server')
-							])),
-						$author$project$HttpExamples$viewNicknamesOrError(model)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$HttpExamples$SendShitRequest)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Get shit data from server')
-							])),
-						$author$project$HttpExamples$viewNicknamesOrError(model)
+						$elm$html$Html$text('An error occured: ' + error)
 					]))
 			]));
 };
-var $author$project$HttpExamples$main = $elm$browser$Browser$element(
+var $elm$html$Html$table = _VirtualDom_node('table');
+var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
+var $elm$html$Html$td = _VirtualDom_node('td');
+var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $author$project$DecodingJson$viewPost = function (post) {
+	return A2(
+		$elm$html$Html$tr,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						$elm$core$String$fromInt(post.id))
+					])),
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(post.title)
+					])),
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$a,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$href(post.author.url)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(post.author.name)
+							]))
+					]))
+			]));
+};
+var $elm$html$Html$th = _VirtualDom_node('th');
+var $author$project$DecodingJson$viewTableHeader = A2(
+	$elm$html$Html$tr,
+	_List_Nil,
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('ID')
+				])),
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Title')
+				])),
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Author')
+				]))
+		]));
+var $author$project$DecodingJson$viewPosts = function (posts) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Posts are:'),
+						A2(
+						$elm$html$Html$table,
+						_List_Nil,
+						_Utils_ap(
+							_List_fromArray(
+								[$author$project$DecodingJson$viewTableHeader]),
+							A2($elm$core$List$map, $author$project$DecodingJson$viewPost, posts)))
+					]))
+			]));
+};
+var $author$project$DecodingJson$viewPostsOrError = function (model) {
+	var _v0 = model.posts;
+	switch (_v0.$) {
+		case 'NotAsked':
+			return $elm$html$Html$text('');
+		case 'Loading':
+			return A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Loading...')
+					]));
+		case 'Success':
+			var posts = _v0.a;
+			return $author$project$DecodingJson$viewPosts(posts);
+		default:
+			var error = _v0.a;
+			return $author$project$DecodingJson$viewError(
+				$author$project$DecodingJson$buildErrorMessage(error));
+	}
+};
+var $author$project$DecodingJson$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$DecodingJson$SendHttpRequest)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Get data from server')
+					])),
+				$author$project$DecodingJson$viewPostsOrError(model)
+			]));
+};
+var $author$project$DecodingJson$main = $elm$browser$Browser$element(
 	{
-		init: $author$project$HttpExamples$init,
+		init: $author$project$DecodingJson$init,
 		subscriptions: function (_v0) {
 			return $elm$core$Platform$Sub$none;
 		},
-		update: $author$project$HttpExamples$update,
-		view: $author$project$HttpExamples$view
+		update: $author$project$DecodingJson$update,
+		view: $author$project$DecodingJson$view
 	});
-_Platform_export({'HttpExamples':{'init':$author$project$HttpExamples$main(
+_Platform_export({'DecodingJson':{'init':$author$project$DecodingJson$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
 
-  var app = Elm.HttpExamples.init({ node: document.getElementById("elm") });
+  var app = Elm.DecodingJson.init({ node: document.getElementById("elm") });
 }
 catch (e)
 {
