@@ -5348,16 +5348,7 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $krisajenkins$remotedata$RemoteData$NotAsked = {$: 'NotAsked'};
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$DecodingJson$init = function (_v0) {
-	return _Utils_Tuple2(
-		{posts: $krisajenkins$remotedata$RemoteData$NotAsked},
-		$elm$core$Platform$Cmd$none);
-};
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $krisajenkins$remotedata$RemoteData$Loading = {$: 'Loading'};
 var $author$project$DecodingJson$DataReceived = function (a) {
 	return {$: 'DataReceived', a: a};
 };
@@ -6263,7 +6254,7 @@ var $author$project$DecodingJson$postDecoder = A4(
 			'id',
 			$elm$json$Json$Decode$int,
 			$elm$json$Json$Decode$succeed($author$project$DecodingJson$Post))));
-var $author$project$DecodingJson$httpCommand = $elm$http$Http$get(
+var $author$project$DecodingJson$fetchPosts = $elm$http$Http$get(
 	{
 		expect: A2(
 			$elm$http$Http$expectJson,
@@ -6271,10 +6262,23 @@ var $author$project$DecodingJson$httpCommand = $elm$http$Http$get(
 			$elm$json$Json$Decode$list($author$project$DecodingJson$postDecoder)),
 		url: 'http://localhost:5019/posts'
 	});
+var $author$project$DecodingJson$init = function (_v0) {
+	return _Utils_Tuple2(
+		{posts: $krisajenkins$remotedata$RemoteData$Loading},
+		$author$project$DecodingJson$fetchPosts);
+};
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$DecodingJson$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'SendHttpRequest') {
-			return _Utils_Tuple2(model, $author$project$DecodingJson$httpCommand);
+		if (msg.$ === 'FetchPosts') {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{posts: $krisajenkins$remotedata$RemoteData$Loading}),
+				$author$project$DecodingJson$fetchPosts);
 		} else {
 			var response = msg.a;
 			return _Utils_Tuple2(
@@ -6284,7 +6288,7 @@ var $author$project$DecodingJson$update = F2(
 				$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$DecodingJson$SendHttpRequest = {$: 'SendHttpRequest'};
+var $author$project$DecodingJson$FetchPosts = {$: 'FetchPosts'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -6478,11 +6482,11 @@ var $author$project$DecodingJson$view = function (model) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$html$Html$Events$onClick($author$project$DecodingJson$SendHttpRequest)
+						$elm$html$Html$Events$onClick($author$project$DecodingJson$FetchPosts)
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Get data from server')
+						$elm$html$Html$text('Refresh data from server')
 					])),
 				$author$project$DecodingJson$viewPostsOrError(model)
 			]));
