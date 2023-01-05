@@ -51,7 +51,7 @@ update msg model =
 
 
 {-
-   Browser.element is the real deal. unless creating a completely static page (basically) you won't ever need Browser.sandbox in the real world, because it doesn't leave any way to communicate w/ the Elm runtime (which does all the handling of side-effects pub/sub).
+   Browser.element is the real deal (actually its not, Browser.application is). unless creating a completely static page (basically) you won't ever need Browser.sandbox in the real world, because it doesn't leave any way to communicate w/ the Elm runtime (which does all the handling of side-effects pub/sub).
    Browser.element gives you options to subscribe to external events you might want to listen for, and fire off events using Cmd.
    Advice is to start of w/ Browser.sandbox until you run into a usecase for Browser.element (but that moment will likely come if youre planning anything at all complex.)
 -}
