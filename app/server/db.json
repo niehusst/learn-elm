@@ -1,10 +1,10 @@
 {
-  "posts" : [
+  "posts": [
     {
       "id": 0,
       "title": "Best post",
       "author": {
-        "name" : "Me",
+        "name": "Me",
         "url": "https://someurl.com"
       }
     },
@@ -12,7 +12,7 @@
       "id": 1,
       "title": "Ok post",
       "author": {
-        "name" : "probs Me",
+        "name": "probs Me",
         "url": "https://someotherurl.com"
       }
     },
@@ -20,13 +20,17 @@
       "id": 2,
       "title": "worst post",
       "author": {
-        "name" : "def Me",
+        "name": "def Me",
         "url": "https://google.com"
       }
     },
     {
       "id": 3,
-      "title": "mystery post"
+      "title": "How 2 fart",
+      "author": {
+        "name": "jim",
+        "url": "https://google.com"
+      }
     }
   ]
 }

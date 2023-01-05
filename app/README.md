@@ -2,9 +2,15 @@
 
 ## Setup
 
-The dummy file host server can be run via `json-server --watch server/db.json -p 5016`
+The dummy file host server can be run via `json-server --watch server/db.json -p 5019`
 
 (requires `npm i json-server -g` first)
+
+`elm reactor` is also too pidly and weak for full web apps, so we need to use elm-live (requires `npm i elm-live -g` first).
+Run with:
+```
+elm-live src/Main.elm --pushstate
+```
 
 ## Organization (finally)
 

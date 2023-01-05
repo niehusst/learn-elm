@@ -1,5 +1,6 @@
-module Page.ListPosts exposing (..)
+module Page.ListPosts exposing (Model, Msg, init, update, view)
 
+import Error exposing (buildErrorMessage)
 import Html exposing (..)
 import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
@@ -84,12 +85,17 @@ viewTableHeader =
 
 viewPost : Post -> Html Msg
 viewPost post =
+    let
+        postPath =
+            "/posts/" ++ Post.idToString post.id
+    in
     tr []
         [ td [] [ text (idToString post.id) ]
         , td [] [ text post.title ]
         , td []
             [ a [ href post.author.url ] [ text post.author.name ]
             ]
+        , td [] [ a [ href postPath ] [ text "Edit" ] ]
         ]
 
 
@@ -108,25 +114,6 @@ fetchPosts =
             postsDecoder
                 |> Http.expectJson (RemoteData.fromResult >> DataReceived)
         }
-
-
-buildErrorMessage : Http.Error -> String
-buildErrorMessage error =
-    case error of
-        Http.BadUrl msg ->
-            msg
-
-        Http.Timeout ->
-            "Server took too long to respond. timeout"
-
-        Http.NetworkError ->
-            "Unable to reach the server"
-
-        Http.BadStatus code ->
-            "Request failed w/ code: " ++ String.fromInt code
-
-        Http.BadBody msg ->
-            msg
 
 
 
@@ -151,8 +138,8 @@ update msg model =
 -- INIT
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
+init : ( Model, Cmd Msg )
+init =
     ( { posts = RemoteData.Loading }
     , fetchPosts
     )
