@@ -11,6 +11,7 @@
 
       app.ports.sendData.subscribe(function(data) {
         console.log("Data from Elm: ", data);
+        app.ports.receiveData.send("Hello to u too elm.");
       });
     </script>
 </body>

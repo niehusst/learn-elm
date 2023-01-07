@@ -5164,17 +5164,29 @@ var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$PortExamples$init = function (_v0) {
 	return _Utils_Tuple2('', $elm$core$Platform$Cmd$none);
 };
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$PortExamples$ReceivedDataFromJS = function (a) {
+	return {$: 'ReceivedDataFromJS', a: a};
+};
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$PortExamples$receiveData = _Platform_incomingPort('receiveData', $elm$json$Json$Decode$string);
+var $author$project$PortExamples$subscriptions = function (_v0) {
+	return $author$project$PortExamples$receiveData($author$project$PortExamples$ReceivedDataFromJS);
+};
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$PortExamples$sendData = _Platform_outgoingPort('sendData', $elm$json$Json$Encode$string);
 var $author$project$PortExamples$update = F2(
 	function (msg, model) {
-		return _Utils_Tuple2(
-			model,
-			$author$project$PortExamples$sendData('Howdy javascript~'));
+		if (msg.$ === 'SendDataToJS') {
+			return _Utils_Tuple2(
+				model,
+				$author$project$PortExamples$sendData('Howdy javascript~'));
+		} else {
+			var data = msg.a;
+			return _Utils_Tuple2(data, $elm$core$Platform$Cmd$none);
+		}
 	});
 var $author$project$PortExamples$SendDataToJS = {$: 'SendDataToJS'};
+var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -5211,17 +5223,13 @@ var $author$project$PortExamples$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text('Send data to JS')
-					]))
+					])),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				$elm$html$Html$text('Data back from JS: ' + model)
 			]));
 };
 var $author$project$PortExamples$main = $elm$browser$Browser$element(
-	{
-		init: $author$project$PortExamples$init,
-		subscriptions: function (_v0) {
-			return $elm$core$Platform$Sub$none;
-		},
-		update: $author$project$PortExamples$update,
-		view: $author$project$PortExamples$view
-	});
+	{init: $author$project$PortExamples$init, subscriptions: $author$project$PortExamples$subscriptions, update: $author$project$PortExamples$update, view: $author$project$PortExamples$view});
 _Platform_export({'PortExamples':{'init':$author$project$PortExamples$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));

@@ -22,3 +22,8 @@ the elm app in order to receive port messages.
 To get data back from JavaScript, our elm app has to define
 subscriptions which will listen for messages delivered
 to us from the JS layer.
+
+For this example, the JS we are communicating with is inside
+the index.html page, where we create our elm app. So if running
+this with `elm reactor`, make sure to open the HTML file,not
+the elm file when testing the JS communication.
