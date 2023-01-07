@@ -27,3 +27,7 @@ For this example, the JS we are communicating with is inside
 the index.html page, where we create our elm app. So if running
 this with `elm reactor`, make sure to open the HTML file,not
 the elm file when testing the JS communication.
+
+Elm usually has JSON data flowing through incoming and outgoing
+ports to communicate w/ JS, but ports will accept any type that
+is valid JSON as well.

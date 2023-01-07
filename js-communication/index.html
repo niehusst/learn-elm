@@ -10,8 +10,8 @@
       });
 
       app.ports.sendData.subscribe(function(data) {
-        console.log("Data from Elm: ", data);
-        app.ports.receiveData.send("Hello to u too elm.");
+        console.log("Data from Elm: ", JSON.stringify(data));
+        app.ports.receiveData.send(`Hello to u too elm. I can see taht ${data.profile.name} has ${data.posts.length} posts and has commented ${data.comments[0].body}`);
       });
     </script>
 </body>
