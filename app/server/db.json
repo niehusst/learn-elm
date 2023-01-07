@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "id": 0,
-      "title": "Best post",
-      "author": {
-        "name": "Me",
-        "url": "https://someurl.com"
-      }
-    },
-    {
       "id": 1,
       "title": "Ok post",
       "author": {

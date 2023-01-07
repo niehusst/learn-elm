@@ -2,7 +2,7 @@ module Page.ListPosts exposing (Model, Msg, init, update, view)
 
 import Error exposing (buildErrorMessage)
 import Html exposing (..)
-import Html.Attributes exposing (href)
+import Html.Attributes exposing (href, type_)
 import Html.Events exposing (onClick)
 import Http
 import Model.Author as Author exposing (..)
@@ -18,12 +18,15 @@ import RemoteData exposing (WebData)
 -}
 type alias Model =
     { posts : WebData (List Post)
+    , deleteError : Maybe String
     }
 
 
 type Msg
     = FetchPosts
+    | DeletePost PostId
     | DataReceived (WebData (List Post))
+    | PostDeleted (Result Http.Error String)
 
 
 
@@ -36,6 +39,7 @@ view model =
         [ button [ onClick FetchPosts ]
             [ text "Refresh data from server" ]
         , viewPostsOrError model
+        , viewDeletionError model
         ]
 
 
@@ -53,6 +57,16 @@ viewPostsOrError model =
 
         RemoteData.Failure error ->
             viewError (buildErrorMessage error)
+
+
+viewDeletionError : Model -> Html Msg
+viewDeletionError model =
+    case model.deleteError of
+        Just message ->
+            viewError message
+
+        Nothing ->
+            text ""
 
 
 viewError : String -> Html Msg
@@ -96,6 +110,10 @@ viewPost post =
             [ a [ href post.author.url ] [ text post.author.name ]
             ]
         , td [] [ a [ href postPath ] [ text "Edit" ] ]
+        , td []
+            [ button [ type_ "button", onClick (DeletePost post.id) ]
+                [ text "DELETE" ]
+            ]
         ]
 
 
@@ -116,6 +134,19 @@ fetchPosts =
         }
 
 
+deletePost : PostId -> Cmd Msg
+deletePost postid =
+    Http.request
+        { method = "DELETE"
+        , headers = []
+        , url = "http://localhost:5019/posts/" ++ Post.idToString postid
+        , body = Http.emptyBody
+        , expect = Http.expectString PostDeleted
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
 
 -- UPDATE
 
@@ -124,12 +155,30 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         FetchPosts ->
-            ( { model | posts = RemoteData.Loading }
+            ( { model
+                | posts = RemoteData.Loading
+                , deleteError = Nothing
+              }
             , fetchPosts
             )
 
+        DeletePost postid ->
+            ( model, deletePost postid )
+
+        PostDeleted (Ok _) ->
+            -- re-fetch posts now that 1 is deleted
+            ( model, fetchPosts )
+
+        PostDeleted (Err httpError) ->
+            ( { model | deleteError = Just (buildErrorMessage httpError) }
+            , Cmd.none
+            )
+
         DataReceived response ->
-            ( { model | posts = response }
+            ( { model
+                | posts = response
+                , deleteError = Nothing
+              }
             , Cmd.none
             )
 
@@ -140,6 +189,8 @@ update msg model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { posts = RemoteData.Loading }
+    ( { posts = RemoteData.Loading
+      , deleteError = Nothing
+      }
     , fetchPosts
     )
