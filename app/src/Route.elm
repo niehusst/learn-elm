@@ -15,14 +15,20 @@ type Route
     = NotFound
     | Posts
     | Post PostId
+    | CreatePost
 
 
+{-| The </> is a parser combiner operator
+but you can probably just think of it as where the / in
+your rout should go.
+-}
 matchRoute : Parser (Route -> a) a
 matchRoute =
     oneOf
         [ map Posts top
         , map Posts (s "posts")
         , map Post (s "posts" </> Model.Post.idParser)
+        , map CreatePost (s "posts" </> s "new")
         ]
 
 
@@ -46,9 +52,12 @@ routeToString : Route -> String
 routeToString route =
     case route of
         NotFound ->
+            -- value doesnt matter
             "/not-found"
 
-        -- value doesnt matter
+        CreatePost ->
+            "/posts/new"
+
         Posts ->
             "/posts"
 

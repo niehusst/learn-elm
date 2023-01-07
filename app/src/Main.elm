@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Html exposing (..)
 import Page.EditPost as EditPost
 import Page.ListPosts as ListPosts
+import Page.NewPost as NewPost
 import Route exposing (Route)
 import Url exposing (Url)
 
@@ -13,6 +14,7 @@ type Page
     = NotFoundPage
     | ListPage ListPosts.Model
     | EditPage EditPost.Model
+    | NewPage NewPost.Model
 
 
 type alias Model =
@@ -29,6 +31,7 @@ code will just forward all messages to the corresponding page.
 type Msg
     = ListPageMsg ListPosts.Msg
     | EditPageMsg EditPost.Msg
+    | NewPageMsg NewPost.Msg
     | LinkClicked UrlRequest
     | UrlChanged Url
 
@@ -54,6 +57,13 @@ initCurrentPage ( model, existingCmds ) =
                             EditPost.init postId model.navKey
                     in
                     ( EditPage pageModel, Cmd.map EditPageMsg pageCmds )
+
+                Route.CreatePost ->
+                    let
+                        ( pageModel, pageCmds ) =
+                            NewPost.init model.navKey
+                    in
+                    ( NewPage pageModel, Cmd.map NewPageMsg pageCmds )
     in
     ( { model | page = currentPage }
     , Cmd.batch [ existingCmds, mappedCmds ]
@@ -119,6 +129,15 @@ update msg model =
             , Cmd.map EditPageMsg updatedCmd
             )
 
+        ( NewPageMsg submsg, NewPage pageModel ) ->
+            let
+                ( updatedPageModel, updatedCmd ) =
+                    NewPost.update submsg pageModel
+            in
+            ( { model | page = NewPage updatedPageModel }
+            , Cmd.map NewPageMsg updatedCmd
+            )
+
         ( _, _ ) ->
             -- handles impossible cases, like (ListPostMsg, EditPostPage)
             ( model, Cmd.none )
@@ -148,6 +167,10 @@ currentView model =
         EditPage editModel ->
             EditPost.view editModel
                 |> Html.map EditPageMsg
+
+        NewPage newModel ->
+            NewPost.view newModel
+                |> Html.map NewPageMsg
 
 
 notFoundView : Html Msg

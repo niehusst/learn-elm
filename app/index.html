@@ -5384,6 +5384,12 @@ var $author$project$Main$ListPage = function (a) {
 var $author$project$Main$ListPageMsg = function (a) {
 	return {$: 'ListPageMsg', a: a};
 };
+var $author$project$Main$NewPage = function (a) {
+	return {$: 'NewPage', a: a};
+};
+var $author$project$Main$NewPageMsg = function (a) {
+	return {$: 'NewPageMsg', a: a};
+};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$Page$EditPost$PostReceived = function (a) {
 	return {$: 'PostReceived', a: a};
@@ -6336,8 +6342,21 @@ var $author$project$Page$ListPosts$fetchPosts = $elm$http$Http$get(
 var $author$project$Page$ListPosts$init = _Utils_Tuple2(
 	{deleteError: $elm$core$Maybe$Nothing, posts: $krisajenkins$remotedata$RemoteData$Loading},
 	$author$project$Page$ListPosts$fetchPosts);
-var $elm$core$Platform$Cmd$map = _Platform_map;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $author$project$Model$Post$emptyPost = {
+	author: {name: '', url: ''},
+	id: $author$project$Model$Post$PostId(-1),
+	title: ''
+};
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Page$NewPost$init = function (navKey) {
+	return _Utils_Tuple2(
+		{createError: $elm$core$Maybe$Nothing, navKey: navKey, post: $author$project$Model$Post$emptyPost},
+		$elm$core$Platform$Cmd$none);
+};
+var $elm$core$Platform$Cmd$map = _Platform_map;
 var $author$project$Main$initCurrentPage = function (_v0) {
 	var model = _v0.a;
 	var existingCmds = _v0.b;
@@ -6353,7 +6372,7 @@ var $author$project$Main$initCurrentPage = function (_v0) {
 				return _Utils_Tuple2(
 					$author$project$Main$ListPage(pageModel),
 					A2($elm$core$Platform$Cmd$map, $author$project$Main$ListPageMsg, pageCmds));
-			default:
+			case 'Post':
 				var postId = _v2.a;
 				var _v4 = A2($author$project$Page$EditPost$init, postId, model.navKey);
 				var pageModel = _v4.a;
@@ -6361,6 +6380,13 @@ var $author$project$Main$initCurrentPage = function (_v0) {
 				return _Utils_Tuple2(
 					$author$project$Main$EditPage(pageModel),
 					A2($elm$core$Platform$Cmd$map, $author$project$Main$EditPageMsg, pageCmds));
+			default:
+				var _v5 = $author$project$Page$NewPost$init(model.navKey);
+				var pageModel = _v5.a;
+				var pageCmds = _v5.b;
+				return _Utils_Tuple2(
+					$author$project$Main$NewPage(pageModel),
+					A2($elm$core$Platform$Cmd$map, $author$project$Main$NewPageMsg, pageCmds));
 		}
 	}();
 	var currentPage = _v1.a;
@@ -6374,6 +6400,7 @@ var $author$project$Main$initCurrentPage = function (_v0) {
 				[existingCmds, mappedCmds])));
 };
 var $author$project$Route$NotFound = {$: 'NotFound'};
+var $author$project$Route$CreatePost = {$: 'CreatePost'};
 var $author$project$Route$Post = function (a) {
 	return {$: 'Post', a: a};
 };
@@ -6554,7 +6581,14 @@ var $author$project$Route$matchRoute = $elm$url$Url$Parser$oneOf(
 			A2(
 				$elm$url$Url$Parser$slash,
 				$elm$url$Url$Parser$s('posts'),
-				$author$project$Model$Post$idParser))
+				$author$project$Model$Post$idParser)),
+			A2(
+			$elm$url$Url$Parser$map,
+			$author$project$Route$CreatePost,
+			A2(
+				$elm$url$Url$Parser$slash,
+				$elm$url$Url$Parser$s('posts'),
+				$elm$url$Url$Parser$s('new')))
 		]));
 var $elm$url$Url$Parser$getFirstMatch = function (states) {
 	getFirstMatch:
@@ -6776,6 +6810,8 @@ var $author$project$Route$routeToString = function (route) {
 	switch (route.$) {
 		case 'NotFound':
 			return '/not-found';
+		case 'CreatePost':
+			return '/posts/new';
 		case 'Posts':
 			return '/posts';
 		default:
@@ -7029,10 +7065,107 @@ var $author$project$Page$ListPosts$update = F2(
 					$elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Page$NewPost$PostCreated = function (a) {
+	return {$: 'PostCreated', a: a};
+};
+var $author$project$Model$Post$newPostEncoder = function (post) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'title',
+				$elm$json$Json$Encode$string(post.title)),
+				_Utils_Tuple2(
+				'author',
+				$author$project$Model$Author$encodeAuthor(post.author))
+			]));
+};
+var $elm$http$Http$post = function (r) {
+	return $elm$http$Http$request(
+		{body: r.body, expect: r.expect, headers: _List_Nil, method: 'POST', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
+};
+var $author$project$Page$NewPost$createPost = function (post) {
+	return $elm$http$Http$post(
+		{
+			body: $elm$http$Http$jsonBody(
+				$author$project$Model$Post$newPostEncoder(post)),
+			expect: A2($elm$http$Http$expectJson, $author$project$Page$NewPost$PostCreated, $author$project$Model$Post$postDecoder),
+			url: 'http://localhost:5019/posts'
+		});
+};
+var $author$project$Model$Post$setTitle = F2(
+	function (newTitle, post) {
+		return _Utils_update(
+			post,
+			{title: newTitle});
+	});
+var $author$project$Page$NewPost$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'StoreTitle':
+				var title = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							post: A2($author$project$Model$Post$setTitle, title, model.post)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'StoreAuthorName':
+				var name = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							post: A3(
+								$elm$core$Basics$apL,
+								$author$project$Model$Post$setAuthor,
+								$author$project$Model$Author$setName(name),
+								model.post)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'StoreAuthorUrl':
+				var url = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							post: A3(
+								$elm$core$Basics$apL,
+								$author$project$Model$Post$setAuthor,
+								$author$project$Model$Author$setUrl(url),
+								model.post)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'CreatePost':
+				return _Utils_Tuple2(
+					model,
+					$author$project$Page$NewPost$createPost(model.post));
+			default:
+				if (msg.a.$ === 'Ok') {
+					var post = msg.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{createError: $elm$core$Maybe$Nothing, post: post}),
+						A2($author$project$Route$pushUrl, $author$project$Route$Posts, model.navKey));
+				} else {
+					var httpError = msg.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								createError: $elm$core$Maybe$Just(
+									$author$project$Error$buildErrorMessage(httpError))
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+		}
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.page);
-		_v0$4:
+		_v0$5:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'ListPageMsg':
@@ -7050,7 +7183,7 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$ListPageMsg, updatedCmd));
 					} else {
-						break _v0$4;
+						break _v0$5;
 					}
 				case 'LinkClicked':
 					var urlRequest = _v0.a.a;
@@ -7077,7 +7210,7 @@ var $author$project$Main$update = F2(
 								model,
 								{route: newRoute}),
 							$elm$core$Platform$Cmd$none));
-				default:
+				case 'EditPageMsg':
 					if (_v0.b.$ === 'EditPage') {
 						var submsg = _v0.a.a;
 						var pageModel = _v0.b.a;
@@ -7092,7 +7225,24 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$EditPageMsg, updatedCmd));
 					} else {
-						break _v0$4;
+						break _v0$5;
+					}
+				default:
+					if (_v0.b.$ === 'NewPage') {
+						var submsg = _v0.a.a;
+						var pageModel = _v0.b.a;
+						var _v4 = A2($author$project$Page$NewPost$update, submsg, pageModel);
+						var updatedPageModel = _v4.a;
+						var updatedCmd = _v4.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									page: $author$project$Main$NewPage(updatedPageModel)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Main$NewPageMsg, updatedCmd));
+					} else {
+						break _v0$5;
 					}
 			}
 		}
@@ -7331,6 +7481,13 @@ var $author$project$Page$EditPost$view = function (model) {
 			]));
 };
 var $author$project$Page$ListPosts$FetchPosts = {$: 'FetchPosts'};
+var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
 var $author$project$Page$ListPosts$viewError = function (error) {
 	return A2(
 		$elm$html$Html$div,
@@ -7358,13 +7515,6 @@ var $author$project$Page$ListPosts$viewDeletionError = function (model) {
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $author$project$Page$ListPosts$DeletePost = function (a) {
 	return {$: 'DeletePost', a: a};
-};
-var $elm$html$Html$a = _VirtualDom_node('a');
-var $elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
 };
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
@@ -7530,8 +7680,142 @@ var $author$project$Page$ListPosts$view = function (model) {
 					[
 						$elm$html$Html$text('Refresh data from server')
 					])),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				A2(
+				$elm$html$Html$a,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$href('/posts/new')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Create new post')
+					])),
 				$author$project$Page$ListPosts$viewPostsOrError(model),
 				$author$project$Page$ListPosts$viewDeletionError(model)
+			]));
+};
+var $author$project$Page$NewPost$viewCreateError = function (error) {
+	if (error.$ === 'Just') {
+		var message = error.a;
+		return A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$h3,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Error occured while creating post:')
+						])),
+					$elm$html$Html$text(message)
+				]));
+	} else {
+		return $elm$html$Html$text('');
+	}
+};
+var $author$project$Page$NewPost$CreatePost = {$: 'CreatePost'};
+var $author$project$Page$NewPost$StoreAuthorName = function (a) {
+	return {$: 'StoreAuthorName', a: a};
+};
+var $author$project$Page$NewPost$StoreAuthorUrl = function (a) {
+	return {$: 'StoreAuthorUrl', a: a};
+};
+var $author$project$Page$NewPost$StoreTitle = function (a) {
+	return {$: 'StoreTitle', a: a};
+};
+var $author$project$Page$NewPost$viewNewPostForm = A2(
+	$elm$html$Html$form,
+	_List_Nil,
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Title'),
+					A2($elm$html$Html$br, _List_Nil, _List_Nil),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('text'),
+							$elm$html$Html$Events$onInput($author$project$Page$NewPost$StoreTitle)
+						]),
+					_List_Nil)
+				])),
+			A2($elm$html$Html$br, _List_Nil, _List_Nil),
+			A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Author Name'),
+					A2($elm$html$Html$br, _List_Nil, _List_Nil),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('text'),
+							$elm$html$Html$Events$onInput($author$project$Page$NewPost$StoreAuthorName)
+						]),
+					_List_Nil)
+				])),
+			A2($elm$html$Html$br, _List_Nil, _List_Nil),
+			A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Author URL'),
+					A2($elm$html$Html$br, _List_Nil, _List_Nil),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('text'),
+							$elm$html$Html$Events$onInput($author$project$Page$NewPost$StoreAuthorUrl)
+						]),
+					_List_Nil)
+				])),
+			A2($elm$html$Html$br, _List_Nil, _List_Nil),
+			A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('button'),
+							$elm$html$Html$Events$onClick($author$project$Page$NewPost$CreatePost)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Submit')
+						]))
+				]))
+		]));
+var $author$project$Page$NewPost$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Create New Post')
+					])),
+				$author$project$Page$NewPost$viewNewPostForm,
+				$author$project$Page$NewPost$viewCreateError(model.createError)
 			]));
 };
 var $author$project$Main$currentView = function (model) {
@@ -7545,12 +7829,18 @@ var $author$project$Main$currentView = function (model) {
 				$elm$html$Html$map,
 				$author$project$Main$ListPageMsg,
 				$author$project$Page$ListPosts$view(listModel));
-		default:
+		case 'EditPage':
 			var editModel = _v0.a;
 			return A2(
 				$elm$html$Html$map,
 				$author$project$Main$EditPageMsg,
 				$author$project$Page$EditPost$view(editModel));
+		default:
+			var newModel = _v0.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Main$NewPageMsg,
+				$author$project$Page$NewPost$view(newModel));
 	}
 };
 var $author$project$Main$view = function (model) {

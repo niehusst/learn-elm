@@ -30,6 +30,11 @@ setAuthor fn post =
     { post | author = fn post.author }
 
 
+setTitle : String -> Post -> Post
+setTitle newTitle post =
+    { post | title = newTitle }
+
+
 {-| there are a few ways we can define postDecoder
 
     postDecoder : Decoder Post
@@ -82,6 +87,14 @@ postIdDecoder =
     Decode.map PostId int
 
 
+newPostEncoder : Post -> Encode.Value
+newPostEncoder post =
+    Encode.object
+        [ ( "title", Encode.string post.title )
+        , ( "author", encodeAuthor post.author )
+        ]
+
+
 postEncoder : Post -> Encode.Value
 postEncoder post =
     Encode.object
@@ -109,3 +122,14 @@ idParser =
     custom "POSTID" <|
         \postId ->
             Maybe.map PostId (String.toInt postId)
+
+
+emptyPost : Post
+emptyPost =
+    { id = PostId -1
+    , title = ""
+    , author =
+        { name = ""
+        , url = ""
+        }
+    }

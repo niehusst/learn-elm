@@ -38,6 +38,9 @@ view model =
     div []
         [ button [ onClick FetchPosts ]
             [ text "Refresh data from server" ]
+        , br [] []
+        , br [] []
+        , a [ href "/posts/new" ] [ text "Create new post" ]
         , viewPostsOrError model
         , viewDeletionError model
         ]
