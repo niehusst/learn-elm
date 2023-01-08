@@ -178,11 +178,22 @@ update msg model =
             )
 
         DataReceived response ->
+            let
+                -- we only want to save posts to local storage
+                -- if response was success
+                savePostsCmd =
+                    case response of
+                        RemoteData.Success unwrappedPosts ->
+                            savePosts (RemoteData.withDefault [] response)
+
+                        _ ->
+                            Cmd.none
+            in
             ( { model
                 | posts = response
                 , deleteError = Nothing
               }
-            , Cmd.none
+            , savePostsCmd
             )
 
 
@@ -190,10 +201,23 @@ update msg model =
 -- INIT
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { posts = RemoteData.Loading
-      , deleteError = Nothing
-      }
-    , fetchPosts
+init : WebData (List Post) -> ( Model, Cmd Msg )
+init posts =
+    let
+        initialCmd =
+            if RemoteData.isSuccess posts then
+                Cmd.none
+
+            else
+                fetchPosts
+    in
+    ( initialModel posts
+    , initialCmd
     )
+
+
+initialModel : WebData (List Post) -> Model
+initialModel posts =
+    { posts = posts
+    , deleteError = Nothing
+    }

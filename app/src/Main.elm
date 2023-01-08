@@ -3,9 +3,12 @@ module Main exposing (main)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Html exposing (..)
+import Json.Decode as Decode exposing (decodeString)
+import Model.Post exposing (Post, postsDecoder)
 import Page.EditPost as EditPost
 import Page.ListPosts as ListPosts
 import Page.NewPost as NewPost
+import RemoteData exposing (WebData)
 import Route exposing (Route)
 import Url exposing (Url)
 
@@ -36,8 +39,11 @@ type Msg
     | UrlChanged Url
 
 
-initCurrentPage : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
-initCurrentPage ( model, existingCmds ) =
+initCurrentPage :
+    WebData (List Post)
+    -> ( Model, Cmd Msg )
+    -> ( Model, Cmd Msg )
+initCurrentPage posts ( model, existingCmds ) =
     let
         ( currentPage, mappedCmds ) =
             case model.route of
@@ -47,7 +53,7 @@ initCurrentPage ( model, existingCmds ) =
                 Route.Posts ->
                     let
                         ( pageModel, pageCmds ) =
-                            ListPosts.init
+                            ListPosts.init posts
                     in
                     ( ListPage pageModel, Cmd.map ListPageMsg pageCmds )
 
@@ -70,16 +76,36 @@ initCurrentPage ( model, existingCmds ) =
     )
 
 
-init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url navKey =
+{-| flags can be of any type. here we are using maybe strign
+-}
+init : Maybe String -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url navKey =
     let
         model =
             { route = Route.parseUrl url
             , page = NotFoundPage
             , navKey = navKey
             }
+
+        posts =
+            case flags of
+                Just postsJson ->
+                    decodeStoredPosts postsJson
+
+                Nothing ->
+                    RemoteData.Loading
     in
-    initCurrentPage ( model, Cmd.none )
+    initCurrentPage posts ( model, Cmd.none )
+
+
+decodeStoredPosts : String -> WebData (List Post)
+decodeStoredPosts postsJson =
+    case decodeString postsDecoder postsJson of
+        Ok posts ->
+            RemoteData.succeed posts
+
+        Err _ ->
+            RemoteData.Loading
 
 
 
@@ -118,7 +144,7 @@ update msg model =
             ( { model | route = newRoute }
             , Cmd.none
             )
-                |> initCurrentPage
+                |> initCurrentPage RemoteData.Loading
 
         ( EditPageMsg submsg, EditPage pageModel ) ->
             let
@@ -183,7 +209,7 @@ notFoundView =
 On init, the Nav.Key provided to the init function holds the full URL that the user entered (so backend server should serve the elm root html for all paths?). The init function is then responsible for making sure the correct page is shown for that initial state.
 
 -}
-main : Program () Model Msg
+main : Program (Maybe String) Model Msg
 main =
     Browser.application
         { init = init

@@ -4,6 +4,7 @@ import Json.Decode as Decode exposing (Decoder, int, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
 import Model.Author as Author exposing (..)
+import Ports
 import Url.Parser exposing (Parser, custom)
 
 
@@ -133,3 +134,10 @@ emptyPost =
         , url = ""
         }
     }
+
+
+savePosts : List Post -> Cmd msg
+savePosts posts =
+    Encode.list postEncoder posts
+        |> Encode.encode 0
+        |> Ports.storePosts

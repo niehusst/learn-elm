@@ -9,8 +9,10 @@ The dummy file host server can be run via `json-server --watch server/db.json -p
 `elm reactor` is also too pidly and weak for full web apps, so we need to use elm-live (requires `npm i elm-live -g` first).
 Run with:
 ```
-elm-live src/Main.elm --pushstate
+elm-live src/Main.elm --pushstate -- --output=elm.js
 ```
+We need to specify the ouput js file since we dont want elm-live
+to refresh our app source directly into the HTML.
 
 ## Organization (finally)
 
