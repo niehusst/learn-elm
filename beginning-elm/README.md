@@ -195,6 +195,20 @@ hello { isLoggedIn, name } =    -- record unpacking in func name
       "login you shit"
 ```
 
+Extensible Record is a type that you can use to help narrow types and expose fewer fields
+of large records to functions. An extensible record means a record that
+just has all the specified and no less (but maybe more).
+This allows you to pass in a large record to a function that takes an
+extensible record type and only expose the specified fields.
+```elm
+type alias Extensible r =
+  { r
+      | name : String
+      , age : Int
+  }
+```
+
+
 ### ---- Standard Lib ----
 
 The `++` operator can be used to concat strings: `"s1" ++ "s2"`.
